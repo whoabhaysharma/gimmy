@@ -3,11 +3,19 @@ import React, { useEffect, useState } from 'react'
 import { authStateListener, logout } from './libs/auth';
 import { useRouter } from 'next/navigation';
 import Modal from '@/components/Modal';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from './libs/firebase';
 
 function Home() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const [modalActive, setModalActive] = useState(false)
+
+  const [name, setName] = useState("")
+  const [contact, setContact] = useState("")
+  const [date, setDate] = useState("")
+  const [saveLoading, setSaveLoading] = useState(false)
 
   useEffect(() => {
     const unsubscribe = authStateListener((user) => {
@@ -27,59 +35,74 @@ function Home() {
     router.push("/login")
   }
 
+  async function saveHandler(e) {
+    e.preventDefault();
+    console.log("SAVE HANDLER")
+    setSaveLoading(true)
+    try {
+      await addDoc(collection(db, "members"), {
+        name : name,
+        contact : contact,
+        joining_date : date
+      })  
+      console.log("added data")
+    } catch (e) {
+      console.log("got an error", e) 
+    } finally {
+      setSaveLoading(false)
+      setModalActive(false)
+      setName('')
+      setContact("")
+      setDate("")
+    }
+  }
+
   return (
-    <div className='p-5'>
-      <Modal active={true} >
-        <h1>hellow rold</h1>
-      </Modal>
-      <div className="navbar bg-base-100">
-        <div className="navbar-start">
-          <div className="dropdown">
-            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
-            </div>
-            <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-              <li><a>Homepage</a></li>
-              <li><a>Portfolio</a></li>
-              <li><a>About</a></li>
-            </ul>
+    <div>
+      <div>
+        <div className="toast toast-top">
+          <div className="alert alert-success">
+            <span>New message arrived.</span>
           </div>
         </div>
-        <div className="navbar-center">
-          <a className="btn btn-ghost text-xl">daisyUI</a>
-        </div>
-        <div className="navbar-end">
-          <button className="btn btn-ghost btn-circle">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-          </button>
-          <button className="btn btn-ghost btn-circle">
-            <div className="indicator">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-              <span className="badge badge-xs badge-primary indicator-item"></span>
-            </div>
-          </button>
+
+        <div className="toast toast-top">
+          <div className="alert alert-error">
+            <span>New message arrived.</span>
+          </div>
         </div>
       </div>
-      <ul className="menu bg-base-200 w-56 rounded-box">
-        <li>
-          <a>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-            Item 2
-          </a>
-        </li>
-        <li>
-          <a>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            Item 1
-          </a>
-        </li>
-        <li>
-          <a>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-            Item 3
-          </a>
-        </li>
-      </ul> 
+     
+      <button className='btn btn-primary' onClick={() => {
+        logout()
+      }}>Logout</button>
+      <Modal active={modalActive}>
+        <div>
+          <h1 className='text-xl mb-2'>Create Member</h1>
+          <form className='form-control flex flex-col gap-2' onSubmit={saveHandler}>
+            <label className="input input-bordered flex flex-col gap-2">
+              <input type="text" className="grow" placeholder="Name" onChange={(e)=> setName(e.target.value)} />
+            </label>
+            <label className="input input-bordered flex flex-col gap-2">
+              <input type="text" className="grow" placeholder="Contact" onChange={(e) => setContact(e.target.value)} />
+            </label>
+            <label className="input input-bordered flex flex-col gap-2">
+              <input type="text" className="grow" placeholder="Joining Date" onChange={(e) => setDate(e.target.value)} />
+            </label>
+          </form>
+          <div className='mt-4 flex flex-row justify-between'>
+            <button className='btn btn-neutral	' onClick={() => setModalActive(false)}>Close</button>
+            <button className='btn btn-primary' type='submit' onClick={saveHandler}>
+              Save
+              {saveLoading && <span className="loading loading-spinner"></span>}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <button className='btn btn-primary' onClick={() => setModalActive(true)}>
+        Open
+      </button>
     </div>
   )
 }
