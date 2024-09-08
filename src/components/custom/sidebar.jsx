@@ -12,12 +12,12 @@ const iconMap = {
 
 export default function Sidebar({ options = [] }) {
   return (
-    <div className="flex flex-col bg-slate-950 text-white w-64">
+    <div className="flex flex-col bg-slate-950 text-white w-full h-screen">
       <div className="flex items-center p-4">
         <div className="w-8 h-8 rounded-full bg-primary" />
         <span className="ml-2 text-lg font-bold">Logo</span>
       </div>
-      <nav className="flex-1 space-y-2 p-4">
+      <nav className="flex-1 space-y-2 p-4 w-full">
         {options.map((option, index) => (
           <NavItem key={index} icon={option.icon} label={option.label} />
         ))}
@@ -32,7 +32,7 @@ function NavItem({ icon, label }) {
   return (
     <Button
       variant="ghost"
-      className="w-full justify-start text-white hover:bg-slate-800"
+      className="w-full justify-start text-white"
     >
       <IconComponent className="h-4 w-4" />
       <span className="ml-2">{label}</span>

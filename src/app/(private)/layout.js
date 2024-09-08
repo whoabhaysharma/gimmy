@@ -12,10 +12,10 @@ export default async function PrivateLayout({ children }) {
     }
     return (
         <div className="flex h-screen w-full flex-row">
-            <div className="w-1/6">
+            <div className="w-2/12">
                 <Sidebar options={[{icon : Home, label : "Home", href : "/"}]}/>
             </div>
-            <div className="w-5/6">
+            <div className="w-10/12">
                 {children}
             </div>
         </div>
