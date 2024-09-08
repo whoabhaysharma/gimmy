@@ -9,6 +9,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { ReloadIcon } from "@radix-ui/react-icons"
 import { login } from "./action"
+import { useToast } from "@/hooks/use-toast"
+import { ToastAction } from "@/components/ui/toast"
 const formSchema = z.object({
     email: z.string().min(2, {
       message: "Username must be at least 2 characters.",
@@ -20,6 +22,8 @@ const formSchema = z.object({
 
 export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState(false)
+    const { toast} = useToast()
 
     const form = useForm({
         resolver: zodResolver(formSchema),
@@ -33,10 +37,12 @@ export default function LoginPage() {
     async function onSubmit(values) {
         setIsLoading(true)
         try {
-            const { data, error } = await login(values)
-            console.log(data)
-        } catch (error) {
-            console.log(error)
+            await login(values)
+        } catch (error) { 
+            toast({
+                title: "Something went wrong cannot login",
+                description: "Please check your credentials and try again",
+              })
         } finally {
             setIsLoading(false)
         }
@@ -75,7 +81,10 @@ export default function LoginPage() {
                             </FormItem>
                         )}
                     />
-                    <Button variant="secondary" type="submit" disabled={isLoading}>
+                    <Button
+                        variant="secondary"
+                        type="submit"
+                        disabled={isLoading}>
                         {isLoading ? <ReloadIcon className="mr-2 h-4 w-4 animate-spin" /> : "Login"}
                     </Button>
                 </form>
