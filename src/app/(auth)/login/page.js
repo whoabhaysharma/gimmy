@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useForm } from "react-hook-form"
@@ -8,8 +8,7 @@ import * as z from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { ReloadIcon } from "@radix-ui/react-icons"
-
-
+import { login } from "./action"
 const formSchema = z.object({
     email: z.string().min(2, {
       message: "Username must be at least 2 characters.",
@@ -33,10 +32,16 @@ export default function LoginPage() {
 
     async function onSubmit(values) {
         setIsLoading(true)
-        console.log(values)
-        // setIsLoading(false)
+        try {
+            const { data, error } = await login(values)
+            console.log(data)
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setIsLoading(false)
+        }
     }
-
+    
     return (
         <div className="flex flex-col items-center justify-center h-screen w-screen">
             <div className="text-6xl font-bold">
