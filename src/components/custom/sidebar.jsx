@@ -1,7 +1,9 @@
+'use client'
 import React from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Home, Settings, Users } from "lucide-react"
+import { usePathname } from "next/navigation"
 
 const iconMap = {
   Home: Home,
@@ -11,30 +13,31 @@ const iconMap = {
 }
 
 export default function Sidebar({ options = [] }) {
+  const pathname = usePathname()
+  console.log(pathname, 'PATHNALE')
   return (
-    <div className="flex flex-col bg-slate-950 text-white w-full h-screen">
+    <div className="flex flex-col w-full h-screen bg-background shadow-lg">
       <div className="flex items-center p-4">
         <div className="w-8 h-8 rounded-full bg-primary" />
         <span className="ml-2 text-lg font-bold">Logo</span>
       </div>
-      <nav className="flex-1 space-y-2 p-4 w-full">
+      <nav className="flex-1 space-y-1 p-4 w-full">
         {options.map((option, index) => (
-          <NavItem key={index} icon={option.icon} label={option.label} />
+          <NavItem key={index} icon={option.icon} label={option.label} isActive={option.href === pathname} />
         ))}
       </nav>
     </div>
   )
 }
 
-function NavItem({ icon, label }) {
-  const IconComponent = iconMap[icon] || Home // Default to Home icon if not found
+function NavItem({ icon, label, isActive }) {
+  const IconComponent = iconMap[icon] // Default to Home icon if not found
 
   return (
     <Button
-      variant="ghost"
-      className="w-full justify-start text-white"
+      className={`w-full justify-start ${isActive ? 'bg-foreground text-background' : 'bg-background text-foreground'} shadow-none border-2 border-foreground/10 hover:bg-foreground/70 hover:text-background`}
     >
-      <IconComponent className="h-4 w-4" />
+      {IconComponent}
       <span className="ml-2">{label}</span>
     </Button>
   )
