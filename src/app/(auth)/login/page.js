@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { ReloadIcon } from "@radix-ui/react-icons"
 import { login } from "./action"
 import { useToast } from "@/hooks/use-toast"
-import { ToastAction } from "@/components/ui/toast"
+
 const formSchema = z.object({
     email: z.string().min(2, {
       message: "Username must be at least 2 characters.",

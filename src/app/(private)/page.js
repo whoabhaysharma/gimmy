@@ -2,15 +2,6 @@
 
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-  } from "@/components/ui/dialog"
-  
-import {
     Table,
     TableBody,
     TableCaption,
@@ -22,13 +13,14 @@ import {
 import { getMembers } from "@/service/members"
 import { EllipsisIcon, Plus } from "lucide-react"
 import { useState, useEffect } from "react"
-
+import { MemberCreate } from "./MemberCreate"
 export default function Home() {
     const [resp, setResp] = useState({})
+    const [createModalActive, setCreateModalActive] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
-            const { data, count } = await getMembers(1, 100)
+            const { data, count } = await getMembers(1, 10)
             setResp({
                 data,
                 count
@@ -42,11 +34,12 @@ export default function Home() {
 
     return (
         <div>
+            <MemberCreate active={createModalActive} onOpenChange={state => setCreateModalActive(state)} />
             <div className="w-full flex flex-row justify-between items-center sticky top-0 bg-background z-10 p-5">
                 <div className="font-bold text-2xl">
                     Members
                 </div>
-                <Button>
+                <Button onClick={() => setCreateModalActive(true)}>
                     Add New
                     <Plus className="scale-75"/>
                 </Button>

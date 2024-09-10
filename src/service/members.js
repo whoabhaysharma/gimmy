@@ -17,3 +17,18 @@ export async function getMembers(page = 1, pageSize = 10) {
 
     return { data, count }
 }
+
+export async function createMember(memberData) {
+    try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+            .from('members')
+            .insert([
+                { ...memberData }
+            ])
+        return {data, error}
+    } catch (error) {
+        throw(new Error("Not able to create the member"))
+    }
+    
+}
