@@ -19,7 +19,7 @@ export default function Sidebar({ options = [] }) {
     <div className="flex flex-col w-full h-screen bg-background shadow-lg">
       <div className="flex items-center p-4">
         <div className="w-8 h-8 rounded-full bg-primary" />
-        <span className="ml-2 text-lg font-bold">Logo</span>
+        <span className="ml-2 text-lg font-bold">Fitbull</span>
       </div>
       <nav className="flex-1 space-y-1 p-4 w-full">
         {options.map((option, index) => (

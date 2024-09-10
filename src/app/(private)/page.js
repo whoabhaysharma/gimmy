@@ -69,7 +69,7 @@ export default function Home() {
                                 <TableCell>{member.created_at}</TableCell>
                                 <TableCell className="text-right">{member.joining_date}</TableCell>
                                 <TableCell>
-                                    <EllipsisIcon />
+                                    <EllipsisIcon className='scale-75 hover:bg-slate-200 h-7 w-7 rounded-sm p-1 cursor-pointer' />
                                 </TableCell>
                             </TableRow>
                         ))}
