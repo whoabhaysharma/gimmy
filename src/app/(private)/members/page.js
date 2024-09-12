@@ -4,16 +4,13 @@ import { Button } from "@/components/ui/button"
 import {
     Table,
     TableBody,
-    TableCaption,
     TableCell,
     TableHead,
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-
-import { getMembers } from "@/service/members"
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CirclePlusIcon, EllipsisIcon, Plus } from "lucide-react"
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CirclePlusIcon, EllipsisIcon, ListFilter } from "lucide-react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { MemberCreate } from "../MemberCreate"
 import { Input } from "@/components/ui/input"
@@ -24,58 +21,78 @@ import debounce from 'lodash/debounce';
 const ITEM_COUNT_PER_PAGE = 10
 const supabase = createClient()
 
+const FILTER_MODE = {
+    NAME: "name",
+    BILL_ID : "bill_id"
+}
+
 export default function Home() {
     const [filter, setFilter] = useState({
-        search: ""
+        search: "",
+        page: 1
     })
     const [resp, setResp] = useState({})
     const [createModalActive, setCreateModalActive] = useState(false)
     const [selectedMember, setSelectedMember] = useState(null)
     const [loading, setLoading] = useState(false)
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const { data, count } = await getMembers(1, 10)
-            setResp({
-                data,
-                count
-            })
-        }
-
-        fetchData()
-    }, [])
+    const [filterMode, setFilterMode] = useState(FILTER_MODE.NAME)
 
     const searchData = useCallback(
-        debounce(async (searchTerm) => {
+        debounce(async (filter) => {
+            const {search = "", page = 1} = filter
             setLoading(true); // Set loading to true when starting the search
-
+            const searchKey = filterMode === FILTER_MODE.NAME ? 'name' : "bill_id"
+            const searchQuery = filterMode === FILTER_MODE.NAME ? `%${search}%` : `${search}`
+            const start = (page - 1) * ITEM_COUNT_PER_PAGE; // Calculate the start index
+            const end = start + ITEM_COUNT_PER_PAGE - 1; // Calculate the end index
             try {
-                const { data, error } = await supabase
-                    .from('members')
-                    .select('*')
-                    .ilike('name', `%${searchTerm}%`) // Search the 'name' field
-                    .limit(10);
+                if (filterMode === FILTER_MODE.NAME) {
+                    const { data, error, count } = await supabase
+                        .from('members')
+                        .select('*', { count: 'exact' })
+                        .range(start, end)
+                        .ilike(searchKey, searchQuery) // Search the 'name' field
+                        .limit(10);
+                    
+                    if (error) {
+                        throw error; // Throw error to be caught in catch block
+                    }
 
-                if (error) {
-                    throw error; // Throw error to be caught in catch block
+                    setResp((prev) => ({
+                        ...prev,
+                        data: data,
+                        count : count
+                    }));
+                } else {
+                    const { data, error, count } = await supabase
+                        .from('members')
+                        .select('*', { count: 'exact' })
+                        .range(start, end)
+                        .eq(searchKey, searchQuery) // Search the 'name' field
+                        .limit(10);
+                    
+                    if (error) {
+                        throw error; // Throw error to be caught in catch block
+                    }
+
+                    setResp((prev) => ({
+                        ...prev,
+                        data: data,
+                        count : count
+                    }));
                 }
-
-                setResp((prev) => ({
-                    ...prev,
-                    data: data,
-                }));
+             
             } catch (error) {
                 console.error('Error searching users:', error);
-                // Optionally, you can update some state here to show an error message to users
             } finally {
                 setLoading(false); // Ensure loading is set to false after the operation completes
             }
         }, 500), // Adjust the delay as needed
-        [] // Empty dependency array ensures this is created only once
+        [filter] // Empty dependency array ensures this is created only once
     );
 
     useEffect(() => {
-        searchData(filter.search)
+        searchData(filter)
     }, [filter])
 
     const members = resp?.data || []
@@ -109,11 +126,24 @@ export default function Home() {
                                 }))
                             }}
                             className="h-8"
-                            placeholder={"Search Members..."}
+                            placeholder={filterMode === FILTER_MODE.NAME ? "Search name..." : "Search Bill no..."}
                         />
                         {loading && <ReloadIcon className="mr-2 h-4 w-4 animate-spin absolute right-1 top-[8px]" />}
                     </div>
-                    
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger>
+                            <div className="h-8 w-8 rounded-md border flex justify-center items-center">
+                                <ListFilter className="h-4 w-4 text-slate-600" />
+                            </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-40">
+                            <DropdownMenuLabel>Filter By</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setFilterMode(FILTER_MODE.NAME)}>Name</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setFilterMode(FILTER_MODE.BILL_ID)}>Bill No.</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <Button size={"sm"} onClick={() => setCreateModalActive(true)}>
                         <CirclePlusIcon className="h-4 w-4 mr-1" />
                         <span className="text-sm">Add Members</span>
@@ -168,15 +198,46 @@ export default function Home() {
                     </Table>
                 </div>
                 <div className="w-full flex flex-row justify-end items-center mt-5">
-                    <span className="text-sm font-semibold mr-10 m">{`Page 1 of ${totalPageCount}`}</span>
+                    <span className="text-sm font-semibold mr-10 m">{`Page ${filter.page} of ${totalPageCount}`}</span>
                     <div className="flex flex-row gap-2">
-                        <span className="p-2 border rounded-sm hover:bg-muted cursor-pointer">
+                        <span
+                            onClick={() => {
+                                setFilter(prev => {
+                                    return {
+                                        ...prev,
+                                        page : 1
+                                    }
+                                })
+                            }}
+                            className="p-2 border rounded-sm hover:bg-muted cursor-pointer"
+                        >
                             <ChevronsLeft className="h-4 w-4 text-slate-600"/>
                         </span>
-                        <span className="p-2 border rounded-sm hover:bg-muted cursor-pointer">
+                        <span
+                            onClick={() => {
+                                if(filter.page === 1) return
+                                setFilter(prev => {
+                                    return {
+                                        ...prev,
+                                        page: prev.page - 1
+                                    }
+                                })
+                            }}
+                            className="p-2 border rounded-sm hover:bg-muted cursor-pointer"
+                        >
                             <ChevronLeft className="h-4 w-4 text-slate-600" />
                         </span>
-                        <span className="p-2 border rounded-sm hover:bg-muted cursor-pointer">
+                        <span
+                            onClick={() => {
+                                setFilter(prev => {
+                                    return {
+                                        ...prev,
+                                        page : prev.page + 1
+                                    }
+                                })
+                            }}
+                            className="p-2 border rounded-sm hover:bg-muted cursor-pointer"
+                        >
                             <ChevronRight className="h-4 w-4 text-slate-600" />
                         </span>
                         <span className="p-2 border rounded-sm hover:bg-muted cursor-pointer">
