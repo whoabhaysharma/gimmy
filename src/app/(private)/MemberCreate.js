@@ -44,7 +44,6 @@ const DEFAULT_DATA = {
 }
 
 export function MemberCreate({ active = false, onOpenChange = () => { }, data = {} }) {
-    console.log(data, 'DATAAA')
     const { toast } = useToast()
     const form = useForm({
         resolver: zodResolver(membersSchema),

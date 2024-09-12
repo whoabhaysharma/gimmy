@@ -11,17 +11,11 @@ export default async function PrivateLayout({ children }) {
     }
     return (
         <div className="flex h-screen max-h-screen w-full flex-row">
-            <div className="w-2/12 h-full">
+            <div className="">
                 <Sidebar
-                    options={
-                        [
-                            { icon: "home", label: "Home", href: "/"},
-                            { icon: "someicon", label: "Members", href: "/members"}
-                        ]
-                    }
                 />
             </div>
-            <div className="w-10/12 max-h-full overflow-auto">
+            <div className="">
                 {children}
             </div>
         </div>
