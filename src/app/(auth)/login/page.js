@@ -82,8 +82,9 @@ export default function LoginPage() {
                         )}
                     />
                     <Button
-                        variant="secondary"
+                        variant="primary"
                         type="submit"
+                        className="bg-foreground/90 text-background"
                         disabled={isLoading}>
                         {isLoading ? <ReloadIcon className="mr-2 h-4 w-4 animate-spin" /> : "Login"}
                     </Button>

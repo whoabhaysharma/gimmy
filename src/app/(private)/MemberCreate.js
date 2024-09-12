@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
     Dialog,
     DialogContent,
@@ -37,39 +37,54 @@ const membersSchema = z.object({
     }),
 });
 
-export function MemberCreate({ active = false, onOpenChange = () => { } }) {
-    const {toast} = useToast()
+const DEFAULT_DATA = {
+    name: "",
+    bill_id: "",
+    joining_date: ""
+}
+
+export function MemberCreate({ active = false, onOpenChange = () => { }, data = {} }) {
+    console.log(data, 'DATAAA')
+    const { toast } = useToast()
     const form = useForm({
         resolver: zodResolver(membersSchema),
-        defaultValues: {
-            name: "",
-            bill_id: "",
-            joining_date: ""
-        }
+        defaultValues: DEFAULT_DATA
     })
+
     const [isLoading, setIsLoading] = useState(false)
+
+    useEffect(() => {
+        if (active) {
+            form.reset({
+                ...DEFAULT_DATA,
+                ...data,
+                bill_id: data?.bill_id ? Number(data.bill_id) : "",
+                joining_date: data?.joining_date ? format(new Date(data.joining_date), 'yyyy/MM/dd') : ""
+            })
+        }
+    }, [active, data, form])
 
     const submit = async (inputData) => {
         setIsLoading(true)
         try {
-            const { data, error } = await createMember(inputData)
+            const { data, error } = await createMember({...inputData})
 
-            console.log(error, 'ERRROR')
             if (error) {
                 const DUPLICATE_MESSAGE = "Bill No already exists please enter new bill number"
                 toast({
                     title: "Error",
-                    description: error.code === "23505" ? DUPLICATE_MESSAGE : "No able to create member"
+                    description: error.code === "23505" ? DUPLICATE_MESSAGE : "Not able to create member"
                 })
             } else {
                 toast({
                     title: "Successfully created member"
-                })   
+                })
+                onOpenChange(false)
             }
         } catch (error) {
             toast({
                 title: "Error",
-                description : "Not able to create member"
+                description: "Not able to create member"
             })
             console.error("Error creating member:", error)
         } finally {
@@ -78,10 +93,7 @@ export function MemberCreate({ active = false, onOpenChange = () => { } }) {
     }
 
     return (
-        <Dialog open={active} onOpenChange={(state) => {
-            form.reset()
-            onOpenChange(state)
-        }}>
+        <Dialog open={active} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Add Member</DialogTitle>
@@ -90,7 +102,7 @@ export function MemberCreate({ active = false, onOpenChange = () => { } }) {
                     </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(submit)} className="space-y-4">
+                    <form onSubmit={form.handleSubmit((formData) => submit({...data, ...formData}))} className="space-y-4">
                         <FormField
                             control={form.control}
                             name="bill_id"
@@ -98,7 +110,7 @@ export function MemberCreate({ active = false, onOpenChange = () => { } }) {
                                 <FormItem>
                                     <FormLabel>Bill No.</FormLabel>
                                     <FormControl>
-                                        <Input type="number" placeholder="Bill no." {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                                        <Input type="number" placeholder="Bill no." {...field} onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

@@ -14,12 +14,12 @@ const iconMap = {
 
 export default function Sidebar({ options = [] }) {
   const pathname = usePathname()
-  console.log(pathname, 'PATHNALE')
   return (
     <div className="flex flex-col w-full h-screen bg-background shadow-lg">
       <div className="flex items-center p-4">
-        <div className="w-8 h-8 rounded-full bg-primary" />
-        <span className="ml-2 text-lg font-bold">Fitbull</span>
+        <div className="h-10 w-full flex justify-center items-center" >
+          <img className="h-full" src="https://i.postimg.cc/zGj90s2w/LOGO-1.png" />
+        </div>
       </div>
       <nav className="flex-1 space-y-1 p-4 w-full">
         {options.map((option, index) => (

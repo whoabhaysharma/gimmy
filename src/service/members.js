@@ -19,16 +19,39 @@ export async function getMembers(page = 1, pageSize = 10) {
 }
 
 export async function createMember(memberData) {
+    const supabase = createClient()
+    let result;
+
+    try {
+        if (memberData.id) {
+            result = await updateMember(memberData)
+        } else {
+            const { data, error } = await supabase
+                .from('members')
+                .insert([memberData])
+                .select()
+            result = { data: data ? data[0] : null, error }
+        }
+        return result
+    } catch (error) {
+        console.error('Error in createMember:', error)
+        throw new Error("Not able to create or update the member")
+    }
+}
+
+export async function updateMember(memberData) {
+    const { id, ...memberDataToUpdate } = memberData
+    console.log(id, 'IDDDD')
     try {
         const supabase = createClient()
         const { data, error } = await supabase
             .from('members')
-            .insert([
-                { ...memberData }
-            ])
-        return {data, error}
+            .update(memberDataToUpdate)
+            .eq('id', id)
+            .select()
+        return { data: data ? data[0] : null, error }
     } catch (error) {
-        throw(new Error("Not able to create the member"))
+        console.error('Error in updateMember:', error)
+        throw new Error("Not able to update the member")
     }
-    
 }
