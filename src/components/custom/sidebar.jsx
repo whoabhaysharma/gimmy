@@ -1,8 +1,10 @@
 'use client'
 import React from "react"
-import { Dumbbell, HomeIcon, UsersIcon } from "lucide-react"
-import { usePathname } from "next/navigation"
+import { Dumbbell, HomeIcon, SettingsIcon, UsersIcon } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu"
+import { createClient } from "@/utils/supabase/client"
 
 const options = [
   { icon: HomeIcon, label: "Home", href: "/" },
@@ -12,6 +14,18 @@ const options = [
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    const supabase = createClient()
+    const { error } = await supabase.auth.signOut();
+
+    if (!error) {
+      router.push('/login');
+    } else {
+      console.error('Error logging out:', error.message);
+    }
+  };
 
   return (
     <div className="min-w-[220px] flex flex-col h-screen bg-background border-r">
@@ -39,19 +53,25 @@ export default function Sidebar() {
           })}
         </nav>
       </div>
+      <nav className="space-y-1 p-4 w-full text-sm border-t cursor-pointer">
+        <DropdownMenu>
+          <DropdownMenuTrigger>
+            <div
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary`}
+            >
+              <SettingsIcon className="h-4 w-4" />
+              Settings
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-40 ml-5">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem>Support</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </nav>
     </div>
   )
 }
-
-// function NavItem({ icon, label, isActive }) {
-//   const IconComponent = iconMap[icon] // Default to Home icon if not found
-
-//   return (
-//     <Button
-//       className={`w-full justify-start ${isActive ? 'bg-foreground text-background' : 'bg-background text-foreground'} shadow-none border-2 border-foreground/10 hover:bg-foreground/70 hover:text-background`}
-//     >
-//       {IconComponent}
-//       <span className="ml-2">{label}</span>
-//     </Button>
-//   )
-// }

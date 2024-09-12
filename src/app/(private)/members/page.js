@@ -54,7 +54,7 @@ export default function Home() {
                 onOpenChange={state => setCreateModalActive(state)}
             />
             <div className="w-full flex flex-row justify-between items-center sticky top-0 bg-background z-10 p-5">
-                <div className="font-bold text-2xl">
+                <div className="text-xl">
                     Members
                 </div>
                 <Button onClick={() => setCreateModalActive(true)}>

@@ -15,7 +15,7 @@ export default async function PrivateLayout({ children }) {
                 <Sidebar
                 />
             </div>
-            <div className="">
+            <div className="flex-1">
                 {children}
             </div>
         </div>
