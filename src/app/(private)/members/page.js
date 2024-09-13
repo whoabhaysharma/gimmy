@@ -39,61 +39,56 @@ export default function Home() {
 
     const searchData = useCallback(
         debounce(async (filter) => {
-            const {search = "", page = 1} = filter
+            const { search = "", page = 1 } = filter;
             setLoading(true); // Set loading to true when starting the search
-            const searchKey = filterMode === FILTER_MODE.NAME ? 'name' : "bill_id"
-            const searchQuery = filterMode === FILTER_MODE.NAME ? `%${search}%` : `${search}`
+            const searchKey = filterMode === FILTER_MODE.NAME ? 'name' : 'bill_id';
+            const searchQuery = filterMode === FILTER_MODE.NAME ? `%${search}%` : search; // No need to format search for bill_id
+
             const start = (page - 1) * ITEM_COUNT_PER_PAGE; // Calculate the start index
             const end = start + ITEM_COUNT_PER_PAGE - 1; // Calculate the end index
+
             try {
+                let data, error, count;
                 if (filterMode === FILTER_MODE.NAME) {
-                    const { data, error, count } = await supabase
+                    // Search by name using ilike
+                    ({ data, error, count } = await supabase
                         .from('members')
                         .select('*', { count: 'exact' })
                         .range(start, end)
-                        .ilike(searchKey, searchQuery) // Search the 'name' field
-                        .limit(10);
-                    
-                    if (error) {
-                        throw error; // Throw error to be caught in catch block
-                    }
-
-                    setResp((prev) => ({
-                        ...prev,
-                        data: data,
-                        count : count
-                    }));
+                        .ilike(searchKey, searchQuery) // Search the 'name' field with ilike
+                        .limit(10));
                 } else {
-                    const { data, error, count } = await supabase
+                    // Search by bill_id using eq for exact matching
+                    ({ data, error, count } = await supabase
                         .from('members')
                         .select('*', { count: 'exact' })
                         .range(start, end)
-                        .eq(searchKey, searchQuery) // Search the 'name' field
-                        .limit(10);
-                    
-                    if (error) {
-                        throw error; // Throw error to be caught in catch block
-                    }
-
-                    setResp((prev) => ({
-                        ...prev,
-                        data: data,
-                        count : count
-                    }));
+                        .eq(searchKey, searchQuery) // Exact match for numeric field bill_id
+                        .limit(10));
                 }
-             
+
+                if (error) {
+                    throw error; // Throw error to be caught in catch block
+                }
+
+                setResp((prev) => ({
+                    ...prev,
+                    data: data,
+                    count: count,
+                }));
             } catch (error) {
                 console.error('Error searching users:', error);
             } finally {
                 setLoading(false); // Ensure loading is set to false after the operation completes
             }
-        }, 500), // Adjust the delay as needed
-        [filter] // Empty dependency array ensures this is created only once
+        }, 500), // Adjust the debounce time as needed
+        [filterMode] // filterMode is the dependency to ensure debouncing works with mode changes
     );
 
     useEffect(() => {
-        searchData(filter)
-    }, [filter])
+        searchData(filter); // Only trigger when filter has valid input
+        return () => searchData.cancel();
+    }, [filter, searchData]);
 
     const members = resp?.data || []
 
@@ -240,7 +235,16 @@ export default function Home() {
                         >
                             <ChevronRight className="h-4 w-4 text-slate-600" />
                         </span>
-                        <span className="p-2 border rounded-sm hover:bg-muted cursor-pointer">
+                        <span
+                            onClick={() => {
+                                setFilter(prev => {
+                                    return {
+                                        ...prev,
+                                        page: totalPageCount
+                                    }
+                                })
+                            }}
+                            className="p-2 border rounded-sm hover:bg-muted cursor-pointer">
                             <ChevronsRight className="h-4 w-4 text-slate-600" />
                         </span>
                     </div>
