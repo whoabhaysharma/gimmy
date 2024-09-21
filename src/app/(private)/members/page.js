@@ -17,6 +17,9 @@ import { Input } from "@/components/ui/input"
 import { createClient } from "@/utils/supabase/client"
 import { ReloadIcon } from "@radix-ui/react-icons"
 import debounce from 'lodash/debounce';
+import { useRouter } from "next/navigation"
+import startCase from 'lodash/startCase';
+import lowerCase from 'lodash/lowerCase';
 
 const ITEM_COUNT_PER_PAGE = 10
 const supabase = createClient()
@@ -36,6 +39,7 @@ export default function Home() {
     const [selectedMember, setSelectedMember] = useState(null)
     const [loading, setLoading] = useState(false)
     const [filterMode, setFilterMode] = useState(FILTER_MODE.NAME)
+    const router = useRouter()
 
     const searchData = useCallback(
         debounce(async (filter) => {
@@ -100,6 +104,10 @@ export default function Home() {
         return pageCount;
     }, [resp]);
 
+    const navigateToMemberPage = (memberId) => {
+        router.push(`/members/${memberId}`)
+    }
+
     return (
         <div className="mx-8">
             <MemberCreate
@@ -159,9 +167,9 @@ export default function Home() {
                         </TableHeader>
                         <TableBody>
                             {members.map((member) => (
-                                <TableRow key={member.id}>
+                                <TableRow className="cursor-pointer" onClick={() => navigateToMemberPage(member.bill_id)} key={member.id}>
                                     <TableCell className="font-medium">{member.bill_id}</TableCell>
-                                    <TableCell>{member.name}</TableCell>
+                                    <TableCell>{startCase(lowerCase(member.name))}</TableCell>
                                     <TableCell>{member.created_at}</TableCell>
                                     <TableCell className="text-right">{member.joining_date}</TableCell>
                                     <TableCell>

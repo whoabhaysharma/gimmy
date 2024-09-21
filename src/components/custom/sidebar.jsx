@@ -1,6 +1,6 @@
 'use client'
 import React from "react"
-import { Dumbbell, HomeIcon, SettingsIcon, UsersIcon } from "lucide-react"
+import { CalendarCheck, Dumbbell, HomeIcon, SettingsIcon, UsersIcon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu"
@@ -43,6 +43,7 @@ export default function Sidebar() {
             const href = option.href
             return (
               <Link
+                key={index}
                 href={href}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${href === pathname ? "text-foreground bg-muted" : 'text-muted-foreground'} transition-all hover:text-primary`}
               >
