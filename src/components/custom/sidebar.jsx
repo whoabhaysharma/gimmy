@@ -38,21 +38,26 @@ export default function Sidebar() {
       <div className="flex-1">
         <nav className="flex-1 space-y-1 p-4 w-full text-sm">
           {options.map((option, index) => {
-            const Icon = option.icon
-            const label = option.label
-            const href = option.href
+            const Icon = option.icon;
+            const label = option.label;
+            const href = option.href;
+
+            // Determine if the current path is active
+            const isActive = pathname === href || pathname.startsWith(`${href}/`);
+
             return (
               <Link
                 key={index}
                 href={href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 ${href === pathname ? "text-foreground bg-muted" : 'text-muted-foreground'} transition-all hover:text-primary`}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2 ${isActive ? "text-foreground bg-muted" : 'text-muted-foreground'} transition-all hover:text-primary`}
               >
                 <Icon className="h-4 w-4" />
                 {label}
               </Link>
-            )
+            );
           })}
         </nav>
+
       </div>
       <nav className="space-y-1 p-4 w-full text-sm border-t cursor-pointer">
         <DropdownMenu>

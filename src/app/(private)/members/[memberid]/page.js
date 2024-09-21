@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { useForm } from 'react-hook-form'
 import { Input } from '@/components/ui/input'
 import { toast } from '@/hooks/use-toast'
@@ -36,8 +36,8 @@ const BADGE_TYPES = {
 }
 
 const DEFAULT_DATA = {
-    membership_type: "12",
-    start_date: "2024-01-14"
+    membership_type: "",
+    start_date: ""
 }
 
 const supabase = createClient()
@@ -106,6 +106,8 @@ export default function Memberships({ params }) {
     }
 
     const addMonthsToDate = (dateString, monthsToAdd) => {
+        if (!dateString) return
+        if(!monthsToAdd) return
         const parsedDate = parse(dateString, 'yyyy-MM-dd', new Date())
         const newDate = addMonths(parsedDate, monthsToAdd)
         return format(newDate, 'yyyy-MM-dd')
@@ -158,6 +160,7 @@ export default function Memberships({ params }) {
                 toast({
                     title: "Successfully saved membership"
                 })
+                updateSubscriptionData()
                 closeDialog()
                 console.log('Data saved successfully');
             }
@@ -212,6 +215,7 @@ export default function Memberships({ params }) {
                                                             </TabsList>
                                                         </Tabs>
                                                     </FormControl>
+                                                    <FormMessage/>
                                                 </FormItem>
                                             )}
                                         />
@@ -244,6 +248,7 @@ export default function Memberships({ params }) {
                                                             </PopoverContent>
                                                         </Popover>
                                                     </FormControl>
+                                                    <FormMessage/>
                                                 </FormItem>
                                             )}
                                         />
@@ -301,8 +306,8 @@ export default function Memberships({ params }) {
                                                 {item.membership_type + " Month"}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell>{item.start_date}</TableCell>
-                                        <TableCell>{endDate}</TableCell>
+                                        <TableCell>{format(item.start_date, "PPP")}</TableCell>
+                                        <TableCell>{format(endDate, "PPP")}</TableCell>
                                         <TableCell>
                                             <Badge className={badgeClass}>
                                                 {status}
