@@ -31,7 +31,7 @@ import { ReloadIcon } from '@radix-ui/react-icons'
 
 const BADGE_TYPES = {
     UPCOMING: "UPCOMING",
-    ON_GOING: "ON_GOING",
+    ON_GOING: "CURRENT",
     EXPIRED: "EXPIRED"
 }
 
@@ -127,17 +127,21 @@ export default function Memberships({ params }) {
         }
     }
 
-    const getStatusByDate = (inputDate) => {
-        const today = new Date()
-        const date = new Date(inputDate)
-        if (date < today) {
-            return BADGE_TYPES.EXPIRED
-        } else if (date > today) {
-            return BADGE_TYPES.UPCOMING
+    const getStatusByDate = (startDate, endDate) => {
+        const today = new Date();
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        if (end < today) {
+            return BADGE_TYPES.EXPIRED;
+        } else if (start > today) {
+            return BADGE_TYPES.UPCOMING;
         } else {
-            return BADGE_TYPES.ON_GOING
+            return BADGE_TYPES.ON_GOING;
         }
-    }
+    };
+
 
     const onSubmit = async (data) => {
         if(loading) return
@@ -297,7 +301,7 @@ export default function Memberships({ params }) {
                         <TableBody>
                             {subscriptionData.map((item) => {
                                 const endDate = addMonthsToDate(item.start_date, parseInt(item.membership_type))
-                                const status = getStatusByDate(endDate)
+                                const status = getStatusByDate(item.start_date ,endDate)
                                 const badgeClass = getBadgeClass(status)
                                 return (
                                     <TableRow key={item.id}>
