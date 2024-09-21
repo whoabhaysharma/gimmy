@@ -5,11 +5,29 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { createClient } from '@/utils/supabase/client'
-import { CirclePlusIcon } from 'lucide-react'
+import { CalendarIcon, CirclePlusIcon } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { parse, format, addMonths } from 'date-fns';
-import startCase from 'lodash/startCase';
-import lowerCase from 'lodash/lowerCase';
+import { parse, format, addMonths } from 'date-fns'
+import startCase from 'lodash/startCase'
+import lowerCase from 'lodash/lowerCase'
+import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils"
+
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
+import { useForm } from 'react-hook-form'
+import { Input } from '@/components/ui/input'
+import { toast } from '@/hooks/use-toast'
+import { ReloadIcon } from '@radix-ui/react-icons'
 
 const BADGE_TYPES = {
     UPCOMING: "UPCOMING",
@@ -17,12 +35,26 @@ const BADGE_TYPES = {
     EXPIRED: "EXPIRED"
 }
 
+const DEFAULT_DATA = {
+    membership_type: "12",
+    start_date: "2024-01-14"
+}
+
 const supabase = createClient()
+
 export default function Memberships({ params }) {
     const { memberid } = params
     const [loading, setLoading] = useState(false)
     const [memberData, setMemberData] = useState({})
     const [subscriptionData, setSubscriptionData] = useState([])
+    const [dialogueActive, setDialogueActive] = useState(false)
+
+    const form = useForm({
+        defaultValues: DEFAULT_DATA
+    })
+
+    const openDialog = () => setDialogueActive(true);
+    const closeDialog = () => setDialogueActive(false);
 
     useEffect(() => {
         updateUserDetail()
@@ -37,67 +69,47 @@ export default function Memberships({ params }) {
 
         try {
             const { data, error } = await supabase
-                .from('memberships')   // Replace 'members' with your table name
-                .select('*')       // Select all columns, or specify specific columns
-                .eq('member_id', memberData.id)     // Match the 'id' column with the provided ID
+                .from('memberships')
+                .select('*')
+                .eq('member_id', memberData.id)
+                .order('created_at', { ascending: false });
 
             if (error) {
-                throw error; // Handle any errors
+                throw error
             }
 
             setSubscriptionData(data)
 
         } catch (error) {
-            console.error('Error fetching item by ID:', error);
-            return null;
+            console.error('Error fetching item by ID:', error)
+            return null
         }
     }
-
-    console.log(subscriptionData, 'SUBSCRIPTION DATA')
 
     async function updateUserDetail() {
         try {
             const { data, error } = await supabase
-                .from('members')   // Replace 'members' with your table name
-                .select('*')       // Select all columns, or specify specific columns
-                .eq('bill_id', memberid)      // Match the 'id' column with the provided ID
-                .single();         // Ensures only a single item is returned
+                .from('members')
+                .select('*')
+                .eq('bill_id', memberid)
+                .single()
 
             if (error) {
-                throw error; // Handle any errors
+                throw error
             }
 
-            setMemberData(data); // Returns the retrieved item
+            setMemberData(data)
         } catch (error) {
-            console.error('Error fetching item by ID:', error);
-            return null;
+            console.error('Error fetching item by ID:', error)
+            return null
         }
     }
 
-
-    const chartData = [
-        { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
-    ]
-    const chartConfig = {
-        visitors: {
-            label: "Visitors",
-        },
-        safari: {
-            label: "Safari",
-            color: "hsl(var(--chart-2))",
-        },
-    }
-
     const addMonthsToDate = (dateString, monthsToAdd) => {
-        // Parse the input string in yyyy-MM-dd format
-        const parsedDate = parse(dateString, 'yyyy-MM-dd', new Date());
-
-        // Add the required number of months
-        const newDate = addMonths(parsedDate, monthsToAdd);
-
-        // Format the date back to yyyy-MM-dd format
-        return format(newDate, 'yyyy-MM-dd');
-    };
+        const parsedDate = parse(dateString, 'yyyy-MM-dd', new Date())
+        const newDate = addMonths(parsedDate, monthsToAdd)
+        return format(newDate, 'yyyy-MM-dd')
+    }
 
     const getBadgeClass = (type) => {
         if (type === BADGE_TYPES.EXPIRED) {
@@ -114,8 +126,8 @@ export default function Memberships({ params }) {
     }
 
     const getStatusByDate = (inputDate) => {
-        const today = new Date();
-        const date = new Date(inputDate);
+        const today = new Date()
+        const date = new Date(inputDate)
         if (date < today) {
             return BADGE_TYPES.EXPIRED
         } else if (date > today) {
@@ -125,19 +137,127 @@ export default function Memberships({ params }) {
         }
     }
 
+    const onSubmit = async (data) => {
+        if(loading) return
+        try {
+            setLoading(true)
+            const { start_date, membership_type } = data;
+
+            const { error } = await supabase
+                .from('memberships')
+                .insert([{ start_date, membership_type, member_id : memberData.id }]);
+
+            
+            if (error) {
+                toast({
+                    title: "Not able to save",
+                    description : error.message
+                })
+                console.error('Error saving data:', error);
+            } else {
+                toast({
+                    title: "Successfully saved membership"
+                })
+                closeDialog()
+                console.log('Data saved successfully');
+            }
+        } catch (error) {
+            toast({
+                title: "Not able to save",
+                description : error.message
+            })
+            console.error('Unexpected error:', error);
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
         <div className="mx-8">
             <div className="w-full flex flex-row justify-between items-center sticky top-0 bg-background z-10 my-4">
                 <div className="text-xl">
-                    Memberships
+                    Member Details
                 </div>
                 <div className="flex flex-row gap-3">
-                    <Button size={"sm"} >
-                        <CirclePlusIcon className="h-4 w-4 mr-1" />
-                        <span className="text-sm">Add Membership</span>
-                    </Button>
+                    <Dialog open={dialogueActive} onOpenChange={setDialogueActive}>
+                        <DialogTrigger>
+                            <div className="flex items-center rounded-md bg-foreground text-background px-2 py-1">
+                                <CirclePlusIcon className="h-4 w-4 mr-1" />
+                                <span className="text-sm">Add Membership</span>
+                            </div>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Add Membership</DialogTitle>
+                                <DialogDescription>
+                                    Once you add the membership and it has been started you cannot edit it.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div>
+                                <Form {...form}>
+                                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-2">
+                                        <FormField
+                                            control={form.control}
+                                            name="membership_type"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Membership Type</FormLabel>
+                                                    <FormControl>
+                                                        <Tabs defaultValue={field.value} className="w-[400px]" onValueChange={field.onChange}>
+                                                            <TabsList>
+                                                                <TabsTrigger value="1">1 Mon</TabsTrigger>
+                                                                <TabsTrigger value="3">3 Mon</TabsTrigger>
+                                                                <TabsTrigger value="6">6 Mon</TabsTrigger>
+                                                                <TabsTrigger value="12">12 Mon</TabsTrigger>
+                                                            </TabsList>
+                                                        </Tabs>
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="start_date"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Start Date</FormLabel>
+                                                    <FormControl>
+                                                        <Popover>
+                                                            <PopoverTrigger asChild>
+                                                                <Button
+                                                                    variant={"outline"}
+                                                                    className={cn("w-full justify-start text-left font-normal")}
+                                                                >
+                                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                    {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-auto p-0" align="start">
+                                                                <Calendar
+                                                                    mode="single"
+                                                                    selected={field.value ? new Date(field.value) : undefined}
+                                                                    onSelect={(date) =>
+                                                                        field.onChange(date ? format(date, "yyyy-MM-dd") : "")
+                                                                    }
+                                                                    initialFocus
+                                                                />
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormLabel>End Date</FormLabel>
+                                        <Input disabled type="text" value={addMonthsToDate(form.watch('start_date'), parseInt(form.watch('membership_type')))} placeholder="End Date" />
+                                        <Button className="mt-2" type="submit">
+                                            {loading ? <ReloadIcon className="mr-2 h-4 w-4 animate-spin" /> : "Save"}
+                                        </Button>
+                                    </form>
+                                </Form>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>
-
             </div>
             <div>
                 <div className="border p-3 rounded-md  flex flex-row justify-between">
@@ -171,7 +291,6 @@ export default function Memberships({ params }) {
                         </TableHeader>
                         <TableBody>
                             {subscriptionData.map((item) => {
-                                console.log(item, 'ITEM')
                                 const endDate = addMonthsToDate(item.start_date, parseInt(item.membership_type))
                                 const status = getStatusByDate(endDate)
                                 const badgeClass = getBadgeClass(status)
@@ -191,9 +310,7 @@ export default function Memberships({ params }) {
                                         </TableCell>
                                     </TableRow>
                                 )
-                            }
-
-                            )}
+                            })}
                         </TableBody>
                     </Table>
                 </div>
