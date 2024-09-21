@@ -20,6 +20,7 @@ import debounce from 'lodash/debounce';
 import { useRouter } from "next/navigation"
 import startCase from 'lodash/startCase';
 import lowerCase from 'lodash/lowerCase';
+import { format } from "date-fns"
 
 const ITEM_COUNT_PER_PAGE = 10
 const supabase = createClient()
@@ -170,8 +171,8 @@ export default function Home() {
                                 <TableRow className="cursor-pointer" onClick={() => navigateToMemberPage(member.bill_id)} key={member.id}>
                                     <TableCell className="font-medium">{member.bill_id}</TableCell>
                                     <TableCell>{startCase(lowerCase(member.name))}</TableCell>
-                                    <TableCell>{member.created_at}</TableCell>
-                                    <TableCell className="text-right">{member.joining_date}</TableCell>
+                                    <TableCell>{format(member.created_at, "PPP")}</TableCell>
+                                    <TableCell className="text-right">{format(member.joining_date, "PPP")}</TableCell>
                                     <TableCell>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger>
