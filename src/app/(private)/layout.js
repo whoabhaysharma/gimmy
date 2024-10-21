@@ -1,4 +1,4 @@
-import Sidebar from "@/components/custom/sidebar";
+import AppSidebar from "@/components/custom/sidebar";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -11,13 +11,9 @@ export default async function PrivateLayout({ children }) {
     }
     return (
         <div className="flex h-screen max-h-screen w-full flex-row">
-            <div className="">
-                <Sidebar
-                />
-            </div>
-            <div className="flex-1">
+            <AppSidebar>
                 {children}
-            </div>
+            </AppSidebar>
         </div>
     )
 }
